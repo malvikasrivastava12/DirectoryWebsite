@@ -1,4 +1,4 @@
-import clientPromise from './mongodb';
+import { getMongoClient } from './mongodb';
 
 // Initial Seed Data with 10 diverse, realistic business listings
 const INITIAL_LISTINGS = [
@@ -146,12 +146,9 @@ const INITIAL_LISTINGS = [
 
 // Helper to access MongoDB collection
 async function getMongoCollection() {
-  if (!clientPromise) {
-    throw new Error('MongoDB client is not initialized. Check MONGODB_URI in .env');
-  }
-  const client = await clientPromise;
+  const client = await getMongoClient();
   if (!client) {
-    throw new Error('Could not connect to MongoDB Atlas database');
+    throw new Error('Could not connect to MongoDB Atlas database. Please check MONGODB_URI in .env');
   }
   const db = client.db('DirectoryListWebsite');
   const collection = db.collection('DirectoryListWebsite');
