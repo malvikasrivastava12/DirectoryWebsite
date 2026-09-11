@@ -93,7 +93,7 @@ export default function AdminLoginPage() {
                 <input
                   type="email"
                   required
-                  placeholder="email"
+                  placeholder="Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="off"
@@ -129,10 +129,10 @@ export default function AdminLoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Authenticating...</span>
+                  <span>Login...</span>
                 </>
               ) : (
-                <span>Authenticate &amp; Enter Dashboard</span>
+                <span>Login</span>
               )}
             </button>
           </form>
