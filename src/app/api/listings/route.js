@@ -31,7 +31,7 @@ export async function POST(request) {
     if (!name || name.trim().length < 2) errors.name = 'Business name must be at least 2 characters';
     if (!category || category.trim().length === 0) errors.category = 'Category is required';
     if (!location || location.trim().length === 0) errors.location = 'Location is required';
-    if (!phone || phone.trim().length < 7) errors.phone = 'Valid phone number is required';
+    if (!phone || phone.trim().length < 7 || phone.trim().length > 10) errors.phone = 'Valid phone number (7-10 digits) is required';
     if (!description || description.trim().length < 10) errors.description = 'Description must be at least 10 characters';
 
     if (Object.keys(errors).length > 0) {

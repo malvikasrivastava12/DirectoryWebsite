@@ -44,8 +44,8 @@ export default function ListingFormModal({ initialData, onClose, onSuccess }) {
     if (!formData.location.trim()) {
       errs.location = 'Location is required';
     }
-    if (!formData.phone.trim() || formData.phone.trim().length < 7) {
-      errs.phone = 'Valid phone number is required (min 7 digits)';
+    if (!formData.phone.trim() || formData.phone.trim().length < 7 || formData.phone.trim().length > 10) {
+      errs.phone = 'Valid phone number is required (7-10 digits)';
     }
     if (!formData.description.trim() || formData.description.trim().length < 10) {
       errs.description = 'Description must be at least 10 characters';
@@ -204,9 +204,14 @@ export default function ListingFormModal({ initialData, onClose, onSuccess }) {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="e.g. +1 (415) 890-1234"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="e.g. 9876543210"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setFormData({ ...formData, phone: val });
+                  }}
                   className={`w-full pl-9 pr-3 py-2 text-sm rounded-xl border bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 transition-all ${
                     errors.phone ? 'border-red-300' : 'border-slate-200 focus:border-brand-500'
                   }`}
