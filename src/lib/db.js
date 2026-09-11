@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import clientPromise from './mongodb';
 
 // Initial Seed Data with 10 diverse, realistic business listings
@@ -146,168 +144,85 @@ const INITIAL_LISTINGS = [
   }
 ];
 
-// Helper to access Mongo collection safely
+// Helper to access MongoDB collection
 async function getMongoCollection() {
-  if (!clientPromise) return null;
-  try {
-    const client = await clientPromise;
-    if (!client) return null;
-    const db = client.db('DirectoryListWebsite');
-    const collection = db.collection('DirectoryListWebsite');
-
-    // Auto-seed if collection is empty
-    const count = await collection.countDocuments();
-    if (count === 0) {
-      await collection.insertMany(INITIAL_LISTINGS);
-      console.log('MongoDB collection "DirectoryListWebsite" created and seeded with initial data');
-    }
-
-    return collection;
-  } catch (error) {
-    console.error('MongoDB connection/seeding notice:', error);
-    return null;
+  if (!clientPromise) {
+    throw new Error('MongoDB client is not initialized. Check MONGODB_URI in .env');
   }
+  const client = await clientPromise;
+  if (!client) {
+    throw new Error('Could not connect to MongoDB Atlas database');
+  }
+  const db = client.db('DirectoryListWebsite');
+  const collection = db.collection('DirectoryListWebsite');
+
+  // Auto-seed if collection is empty
+  const count = await collection.countDocuments();
+  if (count === 0) {
+    await collection.insertMany(INITIAL_LISTINGS);
+    console.log('MongoDB collection "DirectoryListWebsite" auto-seeded with initial data');
+  }
+
+  return collection;
 }
-
-// Local Disk Persistence Fallback
-const getDataFilePath = () => {
-  if (process.env.VERCEL) {
-    return path.join('/tmp', 'listings.json');
-  }
-  const dataDir = path.join(process.cwd(), 'data');
-  if (!fs.existsSync(dataDir)) {
-    try {
-      fs.mkdirSync(dataDir, { recursive: true });
-    } catch {
-      // fallback
-    }
-  }
-  return path.join(dataDir, 'listings.json');
-};
-
-let memoryStore = null;
-
-const loadListingsFromDisk = () => {
-  if (memoryStore) return memoryStore;
-  const filePath = getDataFilePath();
-  try {
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, 'utf-8');
-      memoryStore = JSON.parse(data);
-      return memoryStore || INITIAL_LISTINGS;
-    }
-  } catch (error) {
-    console.error('Error reading listings file:', error);
-  }
-  memoryStore = [...INITIAL_LISTINGS];
-  saveListingsToDisk(memoryStore);
-  return memoryStore;
-};
-
-const saveListingsToDisk = (listings) => {
-  memoryStore = listings;
-  const filePath = getDataFilePath();
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(listings, null, 2), 'utf-8');
-  } catch (error) {
-    console.error('Error saving listings file:', error);
-  }
-};
-
-// Main Exported CRUD Operations (MongoDB primary, local disk fallback)
 
 export async function getListings(searchQuery, category) {
   const collection = await getMongoCollection();
-
-  if (collection) {
-    try {
-      const filter = {};
-      if (category && category !== 'All') {
-        filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
-      }
-      if (searchQuery && searchQuery.trim() !== '') {
-        const q = searchQuery.trim();
-        filter.$or = [
-          { name: { $regex: q, $options: 'i' } },
-          { category: { $regex: q, $options: 'i' } },
-          { location: { $regex: q, $options: 'i' } },
-          { description: { $regex: q, $options: 'i' } },
-          { phone: { $regex: q, $options: 'i' } },
-        ];
-      }
-
-      const docs = await collection.find(filter).sort({ createdAt: -1 }).toArray();
-      return docs.map(doc => ({
-        id: doc.id || doc._id?.toString(),
-        name: doc.name,
-        category: doc.category,
-        location: doc.location,
-        phone: doc.phone,
-        description: doc.description,
-        email: doc.email,
-        website: doc.website,
-        rating: doc.rating,
-        featured: doc.featured,
-        createdAt: doc.createdAt,
-        updatedAt: doc.updatedAt,
-      }));
-    } catch (err) {
-      console.error('MongoDB getListings fallback:', err);
-    }
-  }
-
-  // Fallback to disk
-  let listings = loadListingsFromDisk();
+  const filter = {};
 
   if (category && category !== 'All') {
-    listings = listings.filter(item => item.category.toLowerCase() === category.toLowerCase());
+    filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
   }
-
   if (searchQuery && searchQuery.trim() !== '') {
-    const q = searchQuery.toLowerCase().trim();
-    listings = listings.filter(item => 
-      item.name.toLowerCase().includes(q) ||
-      item.category.toLowerCase().includes(q) ||
-      item.location.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q) ||
-      item.phone.includes(q)
-    );
+    const q = searchQuery.trim();
+    filter.$or = [
+      { name: { $regex: q, $options: 'i' } },
+      { category: { $regex: q, $options: 'i' } },
+      { location: { $regex: q, $options: 'i' } },
+      { description: { $regex: q, $options: 'i' } },
+      { phone: { $regex: q, $options: 'i' } },
+    ];
   }
 
-  return listings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const docs = await collection.find(filter).sort({ createdAt: -1 }).toArray();
+  return docs.map(doc => ({
+    id: doc.id || doc._id?.toString(),
+    name: doc.name,
+    category: doc.category,
+    location: doc.location,
+    phone: doc.phone,
+    description: doc.description,
+    email: doc.email,
+    website: doc.website,
+    rating: doc.rating,
+    featured: doc.featured,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  }));
 }
 
 export async function getListingById(id) {
   const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      const doc = await collection.findOne({ id });
-      if (doc) {
-        return {
-          id: doc.id,
-          name: doc.name,
-          category: doc.category,
-          location: doc.location,
-          phone: doc.phone,
-          description: doc.description,
-          email: doc.email,
-          website: doc.website,
-          rating: doc.rating,
-          featured: doc.featured,
-          createdAt: doc.createdAt,
-          updatedAt: doc.updatedAt,
-        };
-      }
-    } catch (err) {
-      console.error('MongoDB getListingById fallback:', err);
-    }
-  }
-
-  const listings = loadListingsFromDisk();
-  return listings.find(item => item.id === id) || null;
+  const doc = await collection.findOne({ id });
+  if (!doc) return null;
+  return {
+    id: doc.id || doc._id?.toString(),
+    name: doc.name,
+    category: doc.category,
+    location: doc.location,
+    phone: doc.phone,
+    description: doc.description,
+    email: doc.email,
+    website: doc.website,
+    rating: doc.rating,
+    featured: doc.featured,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  };
 }
 
 export async function createListing(data) {
+  const collection = await getMongoCollection();
   const now = new Date().toISOString();
   const newListing = {
     ...data,
@@ -316,86 +231,40 @@ export async function createListing(data) {
     updatedAt: now,
   };
 
-  const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      await collection.insertOne(newListing);
-      return newListing;
-    } catch (err) {
-      console.error('MongoDB createListing fallback:', err);
-    }
-  }
-
-  const listings = loadListingsFromDisk();
-  listings.unshift(newListing);
-  saveListingsToDisk(listings);
+  await collection.insertOne(newListing);
   return newListing;
 }
 
 export async function updateListing(id, data) {
+  const collection = await getMongoCollection();
   const updatedAt = new Date().toISOString();
 
-  const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      const result = await collection.findOneAndUpdate(
-        { id },
-        { $set: { ...data, updatedAt } },
-        { returnDocument: 'after' }
-      );
-      if (result) {
-        return {
-          id: result.id,
-          name: result.name,
-          category: result.category,
-          location: result.location,
-          phone: result.phone,
-          description: result.description,
-          email: result.email,
-          website: result.website,
-          rating: result.rating,
-          featured: result.featured,
-          createdAt: result.createdAt,
-          updatedAt: result.updatedAt,
-        };
-      }
-    } catch (err) {
-      console.error('MongoDB updateListing fallback:', err);
-    }
-  }
+  const result = await collection.findOneAndUpdate(
+    { id },
+    { $set: { ...data, updatedAt } },
+    { returnDocument: 'after' }
+  );
 
-  const listings = loadListingsFromDisk();
-  const index = listings.findIndex(item => item.id === id);
-  if (index === -1) return null;
+  if (!result) return null;
 
-  const updatedListing = {
-    ...listings[index],
-    ...data,
-    updatedAt,
+  return {
+    id: result.id || result._id?.toString(),
+    name: result.name,
+    category: result.category,
+    location: result.location,
+    phone: result.phone,
+    description: result.description,
+    email: result.email,
+    website: result.website,
+    rating: result.rating,
+    featured: result.featured,
+    createdAt: result.createdAt,
+    updatedAt: result.updatedAt,
   };
-
-  listings[index] = updatedListing;
-  saveListingsToDisk(listings);
-  return updatedListing;
 }
 
 export async function deleteListing(id) {
   const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      const res = await collection.deleteOne({ id });
-      if (res.deletedCount && res.deletedCount > 0) {
-        return true;
-      }
-    } catch (err) {
-      console.error('MongoDB deleteListing fallback:', err);
-    }
-  }
-
-  const listings = loadListingsFromDisk();
-  const initialLength = listings.length;
-  const filtered = listings.filter(item => item.id !== id);
-  if (filtered.length === initialLength) return false;
-  saveListingsToDisk(filtered);
-  return true;
+  const res = await collection.deleteOne({ id });
+  return res.deletedCount > 0;
 }
