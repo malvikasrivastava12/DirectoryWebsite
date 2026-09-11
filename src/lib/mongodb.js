@@ -20,10 +20,13 @@ export async function getMongoClient() {
     return null;
   }
 
-  // Reuse existing connected client if available
+  // Reuse existing connected client if topology is connected or ping succeeds
   if (global._mongoClient) {
     try {
-      await global._mongoClient.db('admin').command({ ping: 1 });
+      if (global._mongoClient.topology && global._mongoClient.topology.isConnected()) {
+        return global._mongoClient;
+      }
+      await global._mongoClient.db('DirectoryListWebsite').command({ ping: 1 });
       return global._mongoClient;
     } catch {
       global._mongoClient = null;
