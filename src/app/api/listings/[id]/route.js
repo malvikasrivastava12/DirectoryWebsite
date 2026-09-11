@@ -2,10 +2,7 @@ import { NextResponse } from 'next/server';
 import { getListingById, updateListing, deleteListing } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request, { params }) {
   try {
     const listing = await getListingById(params.id);
     if (!listing) {
@@ -18,10 +15,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request, { params }) {
   try {
     const session = await getAdminSession();
     if (!session) {
@@ -32,7 +26,7 @@ export async function PUT(
     const { name, category, location, phone, description, email, website, rating, featured } = body;
 
     // Validation
-    const errors: Record<string, string> = {};
+    const errors = {};
     if (name !== undefined && name.trim().length < 2) errors.name = 'Business name must be at least 2 characters';
     if (category !== undefined && category.trim().length === 0) errors.category = 'Category is required';
     if (location !== undefined && location.trim().length === 0) errors.location = 'Location is required';
@@ -66,10 +60,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request, { params }) {
   try {
     const session = await getAdminSession();
     if (!session) {

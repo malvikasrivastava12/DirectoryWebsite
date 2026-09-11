@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Building2, Globe, Shield, Sparkles } from 'lucide-react';
 
 export default function Footer() {

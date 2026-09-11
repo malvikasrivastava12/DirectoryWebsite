@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getListings, createListing } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
 
-export async function GET(request: Request) {
+export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('search') || undefined;
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request) {
   try {
     const session = await getAdminSession();
     if (!session) {
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const { name, category, location, phone, description, email, website, rating, featured } = body;
 
     // Validation
-    const errors: Record<string, string> = {};
+    const errors = {};
     if (!name || name.trim().length < 2) errors.name = 'Business name must be at least 2 characters';
     if (!category || category.trim().length === 0) errors.category = 'Category is required';
     if (!location || location.trim().length === 0) errors.location = 'Location is required';

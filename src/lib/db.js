@@ -1,10 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { DirectoryListing } from '@/types';
 import clientPromise from './mongodb';
 
 // Initial Seed Data with 10 diverse, realistic business listings
-const INITIAL_LISTINGS: DirectoryListing[] = [
+const INITIAL_LISTINGS = [
   {
     id: "lst-001",
     name: "Apex Tech Solutions",
@@ -154,13 +153,13 @@ async function getMongoCollection() {
     const client = await clientPromise;
     if (!client) return null;
     const db = client.db('DirectoryListWebsite');
-    const collection = db.collection<DirectoryListing>('DirectoryListWebsite');
+    const collection = db.collection('DirectoryListWebsite');
 
     // Auto-seed if collection is empty
     const count = await collection.countDocuments();
     if (count === 0) {
-      await collection.insertMany(INITIAL_LISTINGS as any);
-      console.log('MongoDB collection "DirectoryListWebsite" in DB "DirectoryListWebsite" created and seeded with initial data');
+      await collection.insertMany(INITIAL_LISTINGS);
+      console.log('MongoDB collection "DirectoryListWebsite" created and seeded with initial data');
     }
 
     return collection;
@@ -186,9 +185,9 @@ const getDataFilePath = () => {
   return path.join(dataDir, 'listings.json');
 };
 
-let memoryStore: DirectoryListing[] | null = null;
+let memoryStore = null;
 
-const loadListingsFromDisk = (): DirectoryListing[] => {
+const loadListingsFromDisk = () => {
   if (memoryStore) return memoryStore;
   const filePath = getDataFilePath();
   try {
@@ -205,7 +204,7 @@ const loadListingsFromDisk = (): DirectoryListing[] => {
   return memoryStore;
 };
 
-const saveListingsToDisk = (listings: DirectoryListing[]) => {
+const saveListingsToDisk = (listings) => {
   memoryStore = listings;
   const filePath = getDataFilePath();
   try {
@@ -217,12 +216,12 @@ const saveListingsToDisk = (listings: DirectoryListing[]) => {
 
 // Main Exported CRUD Operations (MongoDB primary, local disk fallback)
 
-export async function getListings(searchQuery?: string, category?: string): Promise<DirectoryListing[]> {
+export async function getListings(searchQuery, category) {
   const collection = await getMongoCollection();
 
   if (collection) {
     try {
-      const filter: any = {};
+      const filter = {};
       if (category && category !== 'All') {
         filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
       }
@@ -239,7 +238,7 @@ export async function getListings(searchQuery?: string, category?: string): Prom
 
       const docs = await collection.find(filter).sort({ createdAt: -1 }).toArray();
       return docs.map(doc => ({
-        id: doc.id || (doc as any)._id?.toString(),
+        id: doc.id || doc._id?.toString(),
         name: doc.name,
         category: doc.category,
         location: doc.location,
@@ -278,7 +277,7 @@ export async function getListings(searchQuery?: string, category?: string): Prom
   return listings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-export async function getListingById(id: string): Promise<DirectoryListing | null> {
+export async function getListingById(id) {
   const collection = await getMongoCollection();
   if (collection) {
     try {
@@ -308,9 +307,9 @@ export async function getListingById(id: string): Promise<DirectoryListing | nul
   return listings.find(item => item.id === id) || null;
 }
 
-export async function createListing(data: Omit<DirectoryListing, 'id' | 'createdAt' | 'updatedAt'>): Promise<DirectoryListing> {
+export async function createListing(data) {
   const now = new Date().toISOString();
-  const newListing: DirectoryListing = {
+  const newListing = {
     ...data,
     id: `lst-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
     createdAt: now,
@@ -320,7 +319,7 @@ export async function createListing(data: Omit<DirectoryListing, 'id' | 'created
   const collection = await getMongoCollection();
   if (collection) {
     try {
-      await collection.insertOne(newListing as any);
+      await collection.insertOne(newListing);
       return newListing;
     } catch (err) {
       console.error('MongoDB createListing fallback:', err);
@@ -333,7 +332,7 @@ export async function createListing(data: Omit<DirectoryListing, 'id' | 'created
   return newListing;
 }
 
-export async function updateListing(id: string, data: Partial<Omit<DirectoryListing, 'id' | 'createdAt' | 'updatedAt'>>): Promise<DirectoryListing | null> {
+export async function updateListing(id, data) {
   const updatedAt = new Date().toISOString();
 
   const collection = await getMongoCollection();
@@ -369,7 +368,7 @@ export async function updateListing(id: string, data: Partial<Omit<DirectoryList
   const index = listings.findIndex(item => item.id === id);
   if (index === -1) return null;
 
-  const updatedListing: DirectoryListing = {
+  const updatedListing = {
     ...listings[index],
     ...data,
     updatedAt,
@@ -380,7 +379,7 @@ export async function updateListing(id: string, data: Partial<Omit<DirectoryList
   return updatedListing;
 }
 
-export async function deleteListing(id: string): Promise<boolean> {
+export async function deleteListing(id) {
   const collection = await getMongoCollection();
   if (collection) {
     try {

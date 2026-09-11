@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DirectoryListing } from '@/types';
+import { useState } from 'react';
 import { X, Building2, MapPin, Phone, Tag, AlignLeft, Mail, Globe, AlertCircle, Loader2 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -17,13 +16,7 @@ const CATEGORIES = [
   "Other"
 ];
 
-interface ListingFormModalProps {
-  initialData?: DirectoryListing | null;
-  onClose: () => void;
-  onSuccess: () => void;
-}
-
-export default function ListingFormModal({ initialData, onClose, onSuccess }: ListingFormModalProps) {
+export default function ListingFormModal({ initialData, onClose, onSuccess }) {
   const isEditing = !!initialData;
 
   const [formData, setFormData] = useState({
@@ -36,12 +29,12 @@ export default function ListingFormModal({ initialData, onClose, onSuccess }: Li
     website: initialData?.website || '',
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState(null);
 
   const validate = () => {
-    const errs: Record<string, string> = {};
+    const errs = {};
     if (!formData.name.trim() || formData.name.trim().length < 2) {
       errs.name = 'Business name must be at least 2 characters';
     }
@@ -61,7 +54,7 @@ export default function ListingFormModal({ initialData, onClose, onSuccess }: Li
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setServerError(null);
 

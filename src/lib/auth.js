@@ -1,6 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-import bcrypt from 'bcryptjs';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'directory_admin_super_secret_jwt_key_2026'
@@ -11,11 +10,10 @@ const COOKIE_NAME = 'admin_token';
 // Default admin credentials
 export const DEFAULT_ADMIN = {
   email: 'admin@gmail.com',
-  // bcrypt hash for 'admin123'
   passwordHash: '$2a$10$7vCgK8Jp5a5v1Q8G8E8a0e8v8G8E8a0e8v8G8E8a0e8v8G8E8a0e',
 };
 
-export async function createToken(payload: { email: string; role: string }) {
+export async function createToken(payload) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -23,7 +21,7 @@ export async function createToken(payload: { email: string; role: string }) {
     .sign(JWT_SECRET);
 }
 
-export async function verifyToken(token: string) {
+export async function verifyToken(token) {
   try {
     const verified = await jwtVerify(token, JWT_SECRET);
     return verified.payload;
@@ -32,7 +30,7 @@ export async function verifyToken(token: string) {
   }
 }
 
-export async function setAuthCookie(token: string) {
+export async function setAuthCookie(token) {
   const cookieStore = cookies();
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -59,11 +57,11 @@ export async function getAdminSession() {
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
   const payload = await verifyToken(token);
-  return payload ? { email: payload.email as string } : null;
+  return payload ? { email: payload.email } : null;
 }
 
-export function validateAdminCredentials(email: string, password: string): boolean {
-  if (email.toLowerCase().trim() === 'admin@gmail.com' && password === 'admin123') {
+export function validateAdminCredentials(email, password) {
+  if (email && email.toLowerCase().trim() === 'admin@gmail.com' && password === 'admin123') {
     return true;
   }
   return false;

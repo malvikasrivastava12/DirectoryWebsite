@@ -15,10 +15,10 @@ const options = {
   connectTimeoutMS: 10000,
 };
 
-let clientPromise: Promise<MongoClient | null> | null = null;
+let clientPromise = null;
 
 if (uri && uri.startsWith('mongodb') && !uri.includes('<username>')) {
-  const connectWithCatch = (): Promise<MongoClient | null> => {
+  const connectWithCatch = () => {
     const client = new MongoClient(uri, options);
     return client.connect().catch((err) => {
       console.warn('MongoDB connection notice:', err.message || err);
@@ -27,14 +27,10 @@ if (uri && uri.startsWith('mongodb') && !uri.includes('<username>')) {
   };
 
   if (process.env.NODE_ENV === 'development') {
-    const globalWithMongo = global as typeof globalThis & {
-      _mongoClientPromise?: Promise<MongoClient | null>;
-    };
-
-    if (!globalWithMongo._mongoClientPromise) {
-      globalWithMongo._mongoClientPromise = connectWithCatch();
+    if (!global._mongoClientPromise) {
+      global._mongoClientPromise = connectWithCatch();
     }
-    clientPromise = globalWithMongo._mongoClientPromise;
+    clientPromise = global._mongoClientPromise;
   } else {
     clientPromise = connectWithCatch();
   }

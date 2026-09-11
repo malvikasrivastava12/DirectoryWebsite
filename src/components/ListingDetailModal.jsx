@@ -1,14 +1,8 @@
 'use client';
 
-import { DirectoryListing } from '@/types';
 import { X, MapPin, Phone, Mail, Globe, Star, Calendar, Building2 } from 'lucide-react';
 
-interface ListingDetailModalProps {
-  listing: DirectoryListing;
-  onClose: () => void;
-}
-
-export default function ListingDetailModal({ listing, onClose }: ListingDetailModalProps) {
+export default function ListingDetailModal({ listing, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
       <div 
@@ -41,7 +35,7 @@ export default function ListingDetailModal({ listing, onClose }: ListingDetailMo
             {listing.rating && (
               <div className="flex items-center gap-1 mt-1 text-sm font-semibold text-amber-600">
                 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span>{listing.rating.toFixed(1)} / 5.0 Rating</span>
+                <span>{Number(listing.rating).toFixed(1)} / 5.0 Rating</span>
               </div>
             )}
           </div>

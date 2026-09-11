@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validateAdminCredentials, createToken, setAuthCookie } from '@/lib/auth';
 
-export async function POST(request: Request) {
+export async function POST(request) {
   try {
     const body = await request.json();
     const { email, password } = body;

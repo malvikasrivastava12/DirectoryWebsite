@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Building2, ShieldCheck, LogOut, LayoutDashboard, Menu, X, PlusCircle } from 'lucide-react';
+import { Building2, ShieldCheck, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const pathname = usePathname();

@@ -1,21 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { DirectoryListing } from '@/types';
 import { MapPin, Phone, Tag, Star, ExternalLink, Copy, Check } from 'lucide-react';
 import ListingDetailModal from './ListingDetailModal';
 
-
-interface ListingCardProps {
-  listing: DirectoryListing;
-}
-
-export default function ListingCard({ listing }: ListingCardProps) {
+export default function ListingCard({ listing }) {
   const [showDetail, setShowDetail] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
 
-  const getCategoryColor = (cat: string) => {
-    switch (cat.toLowerCase()) {
+  const getCategoryColor = (cat) => {
+    switch ((cat || '').toLowerCase()) {
       case 'technology':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'healthcare':
@@ -42,7 +36,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
     }
   };
 
-  const handleCopyPhone = (e: React.MouseEvent) => {
+  const handleCopyPhone = (e) => {
     e.stopPropagation();
     navigator.clipboard.writeText(listing.phone);
     setCopiedPhone(true);
@@ -68,7 +62,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
             {listing.rating && (
               <span className="flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
                 <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                {listing.rating.toFixed(1)}
+                {Number(listing.rating).toFixed(1)}
               </span>
             )}
           </div>

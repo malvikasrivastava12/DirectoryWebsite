@@ -9,10 +9,10 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('admin@gmail.com');
   const [password, setPassword] = useState('admin123');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
@@ -73,7 +73,29 @@ export default function AdminLoginPage() {
             </p>
           </div>
 
-         
+          {/* Demo Credentials Box */}
+          <div className="mb-6 p-4 rounded-2xl bg-brand-50/80 border border-brand-200 text-brand-900 text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 font-bold text-brand-800">
+                <KeyRound className="w-4 h-4 text-brand-600" />
+                <span>Demo Login Credentials</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('admin@gmail.com');
+                  setPassword('admin123');
+                }}
+                className="px-2.5 py-1 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-[11px] transition-colors shadow-sm"
+              >
+                Auto-fill
+              </button>
+            </div>
+            <div className="flex justify-between font-mono pt-1 text-[11px] border-t border-brand-200/60">
+              <span>Email: <strong className="text-slate-900">admin@gmail.com</strong></span>
+              <span>Password: <strong className="text-slate-900">admin123</strong></span>
+            </div>
+          </div>
 
           {/* Error Alert */}
           {error && (

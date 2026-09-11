@@ -1,5 +1,18 @@
 [
   {
+    "name": "jjjjjj",
+    "category": "Real Estate",
+    "location": "noida",
+    "phone": "4545454545",
+    "description": "testing is must",
+    "website": "https://a.com",
+    "rating": 4.5,
+    "featured": false,
+    "id": "lst-1789149276944-522",
+    "createdAt": "2026-09-11T17:54:36.944Z",
+    "updatedAt": "2026-09-11T17:54:36.944Z"
+  },
+  {
     "name": "ggggg",
     "category": "Dining & Food",
     "location": "noida",

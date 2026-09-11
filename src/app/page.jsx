@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { DirectoryListing, Category } from '@/types';
 import ListingCard from '@/components/ListingCard';
-import { Search, Filter, Sparkles, Building2, MapPin, X, RefreshCw } from 'lucide-react';
+import { Search, Filter, Sparkles, Building2, X, RefreshCw } from 'lucide-react';
 
-const CATEGORIES: Category[] = [
+const CATEGORIES = [
   "All",
   "Technology",
   "Healthcare",
@@ -19,11 +18,11 @@ const CATEGORIES: Category[] = [
 ];
 
 export default function HomePage() {
-  const [listings, setListings] = useState<DirectoryListing[]>([]);
+  const [listings, setListings] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<Category>('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   const fetchListings = useCallback(async () => {
     setLoading(true);

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { DirectoryListing } from '@/types';
 import ListingFormModal from '@/components/ListingFormModal';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal';
 import { 
@@ -19,23 +18,22 @@ import {
   Layers, 
   ShieldCheck, 
   RefreshCw,
-  ExternalLink,
   Loader2
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
 
-  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
-  const [listings, setListings] = useState<DirectoryListing[]>([]);
+  const [authenticated, setAuthenticated] = useState(null);
+  const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedCategory, setSelectedCategory] = useState('All');
 
   // Modal States
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingListing, setEditingListing] = useState<DirectoryListing | null>(null);
-  const [deletingListing, setDeletingListing] = useState<DirectoryListing | null>(null);
+  const [editingListing, setEditingListing] = useState(null);
+  const [deletingListing, setDeletingListing] = useState(null);
 
   // Check auth
   const checkAuth = useCallback(async () => {
@@ -111,7 +109,7 @@ export default function AdminDashboardPage() {
     setIsFormOpen(true);
   };
 
-  const handleOpenEditModal = (listing: DirectoryListing) => {
+  const handleOpenEditModal = (listing) => {
     setEditingListing(listing);
     setIsFormOpen(true);
   };

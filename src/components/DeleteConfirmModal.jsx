@@ -3,14 +3,7 @@
 import { useState } from 'react';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
-interface DeleteConfirmModalProps {
-  title: string;
-  listingName: string;
-  onClose: () => void;
-  onConfirm: () => Promise<void>;
-}
-
-export default function DeleteConfirmModal({ title, listingName, onClose, onConfirm }: DeleteConfirmModalProps) {
+export default function DeleteConfirmModal({ title, listingName, onClose, onConfirm }) {
   const [loading, setLoading] = useState(false);
 
   const handleConfirm = async () => {
