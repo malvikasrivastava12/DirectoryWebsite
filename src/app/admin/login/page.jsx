@@ -7,8 +7,8 @@ import Link from 'next/link';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@gmail.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -73,29 +73,7 @@ export default function AdminLoginPage() {
             </p>
           </div>
 
-          {/* Demo Credentials Box */}
-          <div className="mb-6 p-4 rounded-2xl bg-brand-50/80 border border-brand-200 text-brand-900 text-xs space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 font-bold text-brand-800">
-                <KeyRound className="w-4 h-4 text-brand-600" />
-                <span>Demo Login Credentials</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@gmail.com');
-                  setPassword('admin123');
-                }}
-                className="px-2.5 py-1 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-semibold text-[11px] transition-colors shadow-sm"
-              >
-                Auto-fill
-              </button>
-            </div>
-            <div className="flex justify-between font-mono pt-1 text-[11px] border-t border-brand-200/60">
-              <span>Email: <strong className="text-slate-900">admin@gmail.com</strong></span>
-              <span>Password: <strong className="text-slate-900">admin123</strong></span>
-            </div>
-          </div>
+        
 
           {/* Error Alert */}
           {error && (
@@ -106,7 +84,7 @@ export default function AdminLoginPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Admin Email Address
@@ -115,9 +93,10 @@ export default function AdminLoginPage() {
                 <input
                   type="email"
                   required
-                  placeholder="admin@gmail.com"
+                  placeholder="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="off"
                   className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium"
                 />
                 <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
@@ -135,6 +114,7 @@ export default function AdminLoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="off"
                   className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium"
                 />
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />

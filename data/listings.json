@@ -1,19 +1,5 @@
 [
   {
-    "name": "Ber Servicesq",
-    "category": "Dining & Food",
-    "location": "Noida",
-    "phone": "1234567895",
-    "description": "for testing",
-    "website": "https://beqr.com",
-    "rating": 4.5,
-    "featured": false,
-    "id": "lst-1789152399577-113",
-    "createdAt": "2026-09-11T18:46:39.577Z",
-    "updatedAt": "2026-09-11T18:47:04.251Z",
-    "email": ""
-  },
-  {
     "id": "lst-100",
     "name": "Nexus Cloud Systems",
     "category": "Technology",

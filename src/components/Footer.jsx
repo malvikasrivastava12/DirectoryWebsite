@@ -19,12 +19,7 @@ export default function Footer() {
             <span className="flex items-center gap-1">
               <Shield className="w-3.5 h-3.5 text-brand-600" /> Secure Admin Panel
             </span>
-            <span className="flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Next.js App Router
-            </span>
-            <span className="flex items-center gap-1">
-              <Globe className="w-3.5 h-3.5 text-emerald-500" /> Vercel Ready
-            </span>
+          
           </div>
 
           <p className="text-xs text-slate-400">
