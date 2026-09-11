@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { getMongoClient } from './mongodb';
 
 // Initial Seed Data with 10 diverse, realistic business listings
@@ -144,82 +146,159 @@ const INITIAL_LISTINGS = [
   }
 ];
 
-// Helper to access MongoDB collection
+// Helper to access MongoDB collection safely
 async function getMongoCollection() {
-  const client = await getMongoClient();
-  if (!client) {
-    throw new Error('Could not connect to MongoDB Atlas database. Please check MONGODB_URI in .env');
-  }
-  const db = client.db('DirectoryListWebsite');
-  const collection = db.collection('DirectoryListWebsite');
+  try {
+    const client = await getMongoClient();
+    if (!client) return null;
+    const db = client.db('DirectoryListWebsite');
+    const collection = db.collection('DirectoryListWebsite');
 
-  // Auto-seed if collection is empty
-  const count = await collection.countDocuments();
-  if (count === 0) {
-    await collection.insertMany(INITIAL_LISTINGS);
-    console.log('MongoDB collection "DirectoryListWebsite" auto-seeded with initial data');
+    const count = await collection.countDocuments();
+    if (count === 0) {
+      await collection.insertMany(INITIAL_LISTINGS);
+    }
+    return collection;
+  } catch {
+    return null;
   }
-
-  return collection;
 }
 
+// Local Disk Persistence Storage
+const getDataFilePath = () => {
+  if (process.env.VERCEL) {
+    return path.join('/tmp', 'listings.json');
+  }
+  const dataDir = path.join(process.cwd(), 'data');
+  if (!fs.existsSync(dataDir)) {
+    try {
+      fs.mkdirSync(dataDir, { recursive: true });
+    } catch {}
+  }
+  return path.join(dataDir, 'listings.json');
+};
+
+let memoryStore = null;
+
+const loadListingsFromDisk = () => {
+  if (memoryStore) return memoryStore;
+  const filePath = getDataFilePath();
+  try {
+    if (fs.existsSync(filePath)) {
+      const data = fs.readFileSync(filePath, 'utf-8');
+      memoryStore = JSON.parse(data);
+      if (memoryStore && memoryStore.length > 0) return memoryStore;
+    }
+  } catch (error) {
+    console.error('Error reading listings file:', error);
+  }
+  memoryStore = [...INITIAL_LISTINGS];
+  saveListingsToDisk(memoryStore);
+  return memoryStore;
+};
+
+const saveListingsToDisk = (listings) => {
+  memoryStore = listings;
+  const filePath = getDataFilePath();
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(listings, null, 2), 'utf-8');
+  } catch (error) {
+    console.error('Error saving listings file:', error);
+  }
+};
+
+// CRUD Operations
+
 export async function getListings(searchQuery, category) {
+  // Try MongoDB first
   const collection = await getMongoCollection();
-  const filter = {};
+  if (collection) {
+    try {
+      const filter = {};
+      if (category && category !== 'All') {
+        filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
+      }
+      if (searchQuery && searchQuery.trim() !== '') {
+        const q = searchQuery.trim();
+        filter.$or = [
+          { name: { $regex: q, $options: 'i' } },
+          { category: { $regex: q, $options: 'i' } },
+          { location: { $regex: q, $options: 'i' } },
+          { description: { $regex: q, $options: 'i' } },
+          { phone: { $regex: q, $options: 'i' } },
+        ];
+      }
+
+      const docs = await collection.find(filter).sort({ createdAt: -1 }).toArray();
+      if (docs && docs.length > 0) {
+        return docs.map(doc => ({
+          id: doc.id || doc._id?.toString(),
+          name: doc.name,
+          category: doc.category,
+          location: doc.location,
+          phone: doc.phone,
+          description: doc.description,
+          email: doc.email,
+          website: doc.website,
+          rating: doc.rating,
+          featured: doc.featured,
+          createdAt: doc.createdAt,
+          updatedAt: doc.updatedAt,
+        }));
+      }
+    } catch {}
+  }
+
+  // Reliable disk storage fallback
+  let listings = loadListingsFromDisk();
 
   if (category && category !== 'All') {
-    filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
-  }
-  if (searchQuery && searchQuery.trim() !== '') {
-    const q = searchQuery.trim();
-    filter.$or = [
-      { name: { $regex: q, $options: 'i' } },
-      { category: { $regex: q, $options: 'i' } },
-      { location: { $regex: q, $options: 'i' } },
-      { description: { $regex: q, $options: 'i' } },
-      { phone: { $regex: q, $options: 'i' } },
-    ];
+    listings = listings.filter(item => item.category.toLowerCase() === category.toLowerCase());
   }
 
-  const docs = await collection.find(filter).sort({ createdAt: -1 }).toArray();
-  return docs.map(doc => ({
-    id: doc.id || doc._id?.toString(),
-    name: doc.name,
-    category: doc.category,
-    location: doc.location,
-    phone: doc.phone,
-    description: doc.description,
-    email: doc.email,
-    website: doc.website,
-    rating: doc.rating,
-    featured: doc.featured,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
-  }));
+  if (searchQuery && searchQuery.trim() !== '') {
+    const q = searchQuery.toLowerCase().trim();
+    listings = listings.filter(item => 
+      item.name.toLowerCase().includes(q) ||
+      item.category.toLowerCase().includes(q) ||
+      item.location.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q) ||
+      item.phone.includes(q)
+    );
+  }
+
+  return listings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getListingById(id) {
   const collection = await getMongoCollection();
-  const doc = await collection.findOne({ id });
-  if (!doc) return null;
-  return {
-    id: doc.id || doc._id?.toString(),
-    name: doc.name,
-    category: doc.category,
-    location: doc.location,
-    phone: doc.phone,
-    description: doc.description,
-    email: doc.email,
-    website: doc.website,
-    rating: doc.rating,
-    featured: doc.featured,
-    createdAt: doc.createdAt,
-    updatedAt: doc.updatedAt,
-  };
+  if (collection) {
+    try {
+      const doc = await collection.findOne({ id });
+      if (doc) {
+        return {
+          id: doc.id || doc._id?.toString(),
+          name: doc.name,
+          category: doc.category,
+          location: doc.location,
+          phone: doc.phone,
+          description: doc.description,
+          email: doc.email,
+          website: doc.website,
+          rating: doc.rating,
+          featured: doc.featured,
+          createdAt: doc.createdAt,
+          updatedAt: doc.updatedAt,
+        };
+      }
+    } catch {}
+  }
+
+  const listings = loadListingsFromDisk();
+  return listings.find(item => item.id === id) || null;
 }
 
 export async function createListing(data) {
-  const collection = await getMongoCollection();
   const now = new Date().toISOString();
   const newListing = {
     ...data,
@@ -228,40 +307,69 @@ export async function createListing(data) {
     updatedAt: now,
   };
 
-  await collection.insertOne(newListing);
+  // Sync to MongoDB if available
+  const collection = await getMongoCollection();
+  if (collection) {
+    try {
+      await collection.insertOne({ ...newListing });
+    } catch {}
+  }
+
+  // Always save to disk persistent storage
+  const listings = loadListingsFromDisk();
+  listings.unshift(newListing);
+  saveListingsToDisk(listings);
+
   return newListing;
 }
 
 export async function updateListing(id, data) {
-  const collection = await getMongoCollection();
   const updatedAt = new Date().toISOString();
 
-  const result = await collection.findOneAndUpdate(
-    { id },
-    { $set: { ...data, updatedAt } },
-    { returnDocument: 'after' }
-  );
+  // Sync to MongoDB if available
+  const collection = await getMongoCollection();
+  if (collection) {
+    try {
+      await collection.findOneAndUpdate(
+        { id },
+        { $set: { ...data, updatedAt } },
+        { returnDocument: 'after' }
+      );
+    } catch {}
+  }
 
-  if (!result) return null;
+  // Always update disk persistent storage
+  const listings = loadListingsFromDisk();
+  const index = listings.findIndex(item => item.id === id);
+  if (index === -1) return null;
 
-  return {
-    id: result.id || result._id?.toString(),
-    name: result.name,
-    category: result.category,
-    location: result.location,
-    phone: result.phone,
-    description: result.description,
-    email: result.email,
-    website: result.website,
-    rating: result.rating,
-    featured: result.featured,
-    createdAt: result.createdAt,
-    updatedAt: result.updatedAt,
+  const updatedListing = {
+    ...listings[index],
+    ...data,
+    updatedAt,
   };
+
+  listings[index] = updatedListing;
+  saveListingsToDisk(listings);
+
+  return updatedListing;
 }
 
 export async function deleteListing(id) {
+  // Sync to MongoDB if available
   const collection = await getMongoCollection();
-  const res = await collection.deleteOne({ id });
-  return res.deletedCount > 0;
+  if (collection) {
+    try {
+      await collection.deleteOne({ id });
+    } catch {}
+  }
+
+  // Always delete from disk persistent storage
+  const listings = loadListingsFromDisk();
+  const initialLength = listings.length;
+  const filtered = listings.filter(item => item.id !== id);
+  if (filtered.length === initialLength) return false;
+
+  saveListingsToDisk(filtered);
+  return true;
 }
