@@ -1,6 +1,6 @@
 # Directory Listing Website & Admin Panel
 
-A full-stack **Directory Listing Website** built with **Next.js 14 (App Router)**, **React**, **TypeScript**, **Tailwind CSS**, **API Routes**, and **JWT Cookie Authentication**.
+A full-stack **Directory Listing Website** built with **Next.js 14 (App Router)**, **React**, **JavaScript / JSX**, **Tailwind CSS**, **API Routes**, and **JWT Cookie Authentication**.
 
 ---
 
@@ -10,7 +10,7 @@ A full-stack **Directory Listing Website** built with **Next.js 14 (App Router)*
 - **Business Cards Display**: Shows Name, Category, Location, Phone, Description, Email, Website, and Rating.
 - **Real-Time Search**: Search listings dynamically by business name, category, location, or description.
 - **Category Filtering**: Instant category pills filter (Technology, Healthcare, Dining & Food, Real Estate, Finance, Auto, etc.).
-- **Interactive Details Modal**: Click any card to open a full details popup with one-click phone copy/call and website links.
+- **Interactive Listing Details Modal**: Click any card to open a full details popup with one-click phone copy/call and website links.
 - **Fully Responsive Design**: Optimized for mobile, tablet, and desktop viewports with a modern visual design system.
 
 ### 🔐 Admin Panel & Management
@@ -25,26 +25,12 @@ A full-stack **Directory Listing Website** built with **Next.js 14 (App Router)*
 ## 🛠️ Technology Stack
 
 - **Framework**: Next.js 14+ (App Router, Server & Client Components)
-- **Language**: TypeScript
+- **Language**: JavaScript / JSX
 - **Styling**: Tailwind CSS, Custom Utility Tokens
 - **Icons & Motion**: Lucide React, Framer Motion
 - **Authentication**: `jose` (JWT) with HTTP-Only Cookies & `bcryptjs`
-- **Database / Storage**: MongoDB (`MONGODB_URI` via `mongodb` driver) & Persistent fallback storage
+- **Persistent Storage**: Persistent file-backed DB store (`/data/listings.json` with fallback to `/tmp` for Vercel read-only filesystem)
 - **Deployment**: Vercel ready out-of-the-box
-
----
-
-## ⚙️ Environment Variables Setup
-
-Create a `.env` file in the root directory:
-
-```env
-# MongoDB Connection String
-MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/directory_db?retryWrites=true&w=majority
-
-# JWT Token Secret Key
-JWT_SECRET=directory_admin_super_secret_jwt_key_2026
-```
 
 ---
 
@@ -60,8 +46,8 @@ JWT_SECRET=directory_admin_super_secret_jwt_key_2026
 
 ### 1. Clone & Install Dependencies
 ```bash
-git clone <your-repository-url>
-cd task
+git clone https://github.com/malvikasrivastava12/DirectoryWebsite.git
+cd DirectoryWebsite
 npm install
 ```
 

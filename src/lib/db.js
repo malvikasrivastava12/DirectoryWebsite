@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { getMongoClient } from './mongodb';
 
 // Initial Seed Data with 10 diverse, realistic business listings
 const INITIAL_LISTINGS = [
@@ -146,24 +145,6 @@ const INITIAL_LISTINGS = [
   }
 ];
 
-// Helper to access MongoDB collection safely
-async function getMongoCollection() {
-  try {
-    const client = await getMongoClient();
-    if (!client) return null;
-    const db = client.db('DirectoryListWebsite');
-    const collection = db.collection('DirectoryListWebsite');
-
-    const count = await collection.countDocuments();
-    if (count === 0) {
-      await collection.insertMany(INITIAL_LISTINGS);
-    }
-    return collection;
-  } catch {
-    return null;
-  }
-}
-
 // Local Disk Persistence Storage
 const getDataFilePath = () => {
   if (process.env.VERCEL) {
@@ -210,46 +191,6 @@ const saveListingsToDisk = (listings) => {
 // CRUD Operations
 
 export async function getListings(searchQuery, category) {
-  // Try MongoDB first
-  const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      const filter = {};
-      if (category && category !== 'All') {
-        filter.category = { $regex: new RegExp(`^${category}$`, 'i') };
-      }
-      if (searchQuery && searchQuery.trim() !== '') {
-        const q = searchQuery.trim();
-        filter.$or = [
-          { name: { $regex: q, $options: 'i' } },
-          { category: { $regex: q, $options: 'i' } },
-          { location: { $regex: q, $options: 'i' } },
-          { description: { $regex: q, $options: 'i' } },
-          { phone: { $regex: q, $options: 'i' } },
-        ];
-      }
-
-      const docs = await collection.find(filter).sort({ createdAt: -1 }).toArray();
-      if (docs && docs.length > 0) {
-        return docs.map(doc => ({
-          id: doc.id || doc._id?.toString(),
-          name: doc.name,
-          category: doc.category,
-          location: doc.location,
-          phone: doc.phone,
-          description: doc.description,
-          email: doc.email,
-          website: doc.website,
-          rating: doc.rating,
-          featured: doc.featured,
-          createdAt: doc.createdAt,
-          updatedAt: doc.updatedAt,
-        }));
-      }
-    } catch {}
-  }
-
-  // Reliable disk storage fallback
   let listings = loadListingsFromDisk();
 
   if (category && category !== 'All') {
@@ -271,29 +212,6 @@ export async function getListings(searchQuery, category) {
 }
 
 export async function getListingById(id) {
-  const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      const doc = await collection.findOne({ id });
-      if (doc) {
-        return {
-          id: doc.id || doc._id?.toString(),
-          name: doc.name,
-          category: doc.category,
-          location: doc.location,
-          phone: doc.phone,
-          description: doc.description,
-          email: doc.email,
-          website: doc.website,
-          rating: doc.rating,
-          featured: doc.featured,
-          createdAt: doc.createdAt,
-          updatedAt: doc.updatedAt,
-        };
-      }
-    } catch {}
-  }
-
   const listings = loadListingsFromDisk();
   return listings.find(item => item.id === id) || null;
 }
@@ -307,15 +225,6 @@ export async function createListing(data) {
     updatedAt: now,
   };
 
-  // Sync to MongoDB if available
-  const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      await collection.insertOne({ ...newListing });
-    } catch {}
-  }
-
-  // Always save to disk persistent storage
   const listings = loadListingsFromDisk();
   listings.unshift(newListing);
   saveListingsToDisk(listings);
@@ -326,19 +235,6 @@ export async function createListing(data) {
 export async function updateListing(id, data) {
   const updatedAt = new Date().toISOString();
 
-  // Sync to MongoDB if available
-  const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      await collection.findOneAndUpdate(
-        { id },
-        { $set: { ...data, updatedAt } },
-        { returnDocument: 'after' }
-      );
-    } catch {}
-  }
-
-  // Always update disk persistent storage
   const listings = loadListingsFromDisk();
   const index = listings.findIndex(item => item.id === id);
   if (index === -1) return null;
@@ -356,15 +252,6 @@ export async function updateListing(id, data) {
 }
 
 export async function deleteListing(id) {
-  // Sync to MongoDB if available
-  const collection = await getMongoCollection();
-  if (collection) {
-    try {
-      await collection.deleteOne({ id });
-    } catch {}
-  }
-
-  // Always delete from disk persistent storage
   const listings = loadListingsFromDisk();
   const initialLength = listings.length;
   const filtered = listings.filter(item => item.id !== id);
